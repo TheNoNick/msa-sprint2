@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: booking-history-service
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/history}
+    username: ${DB_USER:history}
+    password: ${DB_PASSWORD:history}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: booking-history-service
+      auto-offset-reset: earliest
+      properties:
+        allow.auto.create.topics: false
+
+booking:
+  topic: booking.events
