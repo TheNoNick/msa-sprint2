@@ -1,0 +1,23 @@
+extend schema
+  @link(url: "https://specs.apollo.dev/federation/v2.3", import: ["@key"])
+
+type Booking @key(fields: "id") {
+  id: ID!
+  userId: String!
+  hotelId: String!
+  promoCode: String
+  # Значение, сохранённое при бронировании. В суперграфе поле переопределено promocode-subgraph (@override)
+  discountPercent: Float
+  price: Float
+  createdAt: String
+  hotel: Hotel
+}
+
+# Отель резолвится в hotel-subgraph, здесь только ссылка по id
+type Hotel @key(fields: "id", resolvable: false) {
+  id: ID!
+}
+
+type Query {
+  bookingsByUser(userId: String!): [Booking]
+}

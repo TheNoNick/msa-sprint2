@@ -2,35 +2,14 @@ import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import gql from 'graphql-tag';
+import { readFileSync } from 'fs';
+import { resolvers } from './resolvers.js';
 
-const typeDefs = gql`
-  type Booking @key(fields: "id") {
-    id: ID!
-    userId: String!
-    hotelId: String!
-    promoCode: String
-    discountPercent: Int
-  }
-
-  type Query {
-    bookingsByUser(userId: String!): [Booking]
-  }
-
-`;
-
-const resolvers = {
-  Query: {
-    bookingsByUser: async (_, { userId }, { req }) => {
-		// TODO: Реальный вызов к grpc booking-сервису или заглушка + ACL
-    },
-  },
-  Booking: {
-	  // TODO: Реальный вызов к grpc booking-сервису или заглушка + ACL
-  },
-};
+const typeDefs = gql(readFileSync(new URL('./schema.graphql', import.meta.url), 'utf8'));
 
 const server = new ApolloServer({
   schema: buildSubgraphSchema([{ typeDefs, resolvers }]),
+  includeStacktraceInErrorResponses: false,
 });
 
 startStandaloneServer(server, {

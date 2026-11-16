@@ -2,39 +2,20 @@ import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import gql from 'graphql-tag';
+import { readFileSync } from 'fs';
+import { resolvers } from './resolvers.js';
+import { createHotelLoader } from './loaders.js';
 
-const typeDefs = gql`
-  type Hotel @key(fields: "id") {
-    id: ID!
-    name: String
-    city: String
-    stars: Int
-  }
-
-  type Query {
-    hotelsByIds(ids: [ID!]!): [Hotel]
-  }
-`;
-
-const resolvers = {
-  Hotel: {
-    __resolveReference: async ({ id }) => {
-      // TODO: Реальный вызов к hotel-сервису или заглушка
-    },
-  },
-  Query: {
-    hotelsByIds: async (_, { ids }) => {
-      // TODO: Заглушка или REST-запрос
-    },
-  },
-};
+const typeDefs = gql(readFileSync(new URL('./schema.graphql', import.meta.url), 'utf8'));
 
 const server = new ApolloServer({
   schema: buildSubgraphSchema([{ typeDefs, resolvers }]),
+  includeStacktraceInErrorResponses: false,
 });
 
 startStandaloneServer(server, {
   listen: { port: 4002 },
+  context: async ({ req }) => ({ req, hotelLoader: createHotelLoader() }),
 }).then(() => {
   console.log('✅ Hotel subgraph ready at http://localhost:4002/');
 });
