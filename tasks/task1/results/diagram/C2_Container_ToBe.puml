@@ -1,0 +1,40 @@
+@startuml C2_Container_ToBe
+title Hotelio Container Diagram: To-Be (через 2–3 месяца)
+
+!include <C4/C4_Container>
+
+Person(user, "Пользователь", "Ищет и бронирует отели через веб и мобильное приложение")
+Person(analyst, "Аналитик", "Смотрит статистику бронирований")
+System_Ext(partners, "Партнерские каналы", "Работают через REST API монолита")
+
+System_Boundary(hotelio, "Hotelio") {
+    Container(frontend, "Frontend", "Web / Mobile", "Клиентские приложения")
+
+    Container(monolith, "Монолит", "Java, Spring Boot", "User, Hotel, Review, PromoCode. Код бронирования заморожен, /api/bookings проксируется фасадом GrpcBookingService")
+    ContainerDb(monolith_db, "База монолита DB", "PostgreSQL", "app_user, hotel, review, promo_code, booking (только старые данные, архив)")
+
+    Container(booking, "booking-service", "Java, gRPC", "Создание и список бронирований, проверки, расчет цены и скидки")
+    ContainerDb(booking_db, "Booking DB", "PostgreSQL", "booking, outbox")
+
+    Container(kafka, "Kafka", "Apache Kafka", "Топик booking.events")
+
+    Container(history, "booking-history-service", "Java, Spring Boot", "История и статистика бронирований по событиям")
+    ContainerDb(history_db, "History DB", "PostgreSQL", "booking_history")
+}
+
+Rel(user, frontend, "Использует")
+Rel(frontend, monolith, "Запросы данных", "REST")
+Rel(partners, monolith, "Бронирования, поиск отелей", "REST")
+Rel(analyst, history, "Статистика бронирований", "REST")
+
+Rel(monolith, booking, "/api/bookings через фасад", "gRPC")
+Rel(monolith, monolith_db, "Читает и пишет", "JDBC")
+
+Rel(booking, monolith, "Проверка пользователей, отеля, отзывов, промокодов", "REST")
+Rel(booking, booking_db, "Читает и пишет", "JDBC")
+Rel(booking, kafka, "BookingCreated", "outbox")
+
+Rel(kafka, history, "BookingCreated", "consumer")
+Rel(history, history_db, "Читает и пишет", "JDBC")
+
+@enduml

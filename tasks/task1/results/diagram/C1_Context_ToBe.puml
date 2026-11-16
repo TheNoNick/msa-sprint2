@@ -1,0 +1,17 @@
+@startuml C1_Context_ToBe
+!include <C4/C4_Context>
+
+title Hotelio — контекст системы (To-Be, через 2–3 месяца)
+
+Person(user, "Пользователь", "Ищет и бронирует отели")
+Person(analyst, "Аналитик", "Смотрит статистику бронирований")
+System_Ext(partner, "Партнерские каналы", "Агрегаторы, работают через REST API")
+
+System(hotelio, "Hotelio", "Платформа бронирования: монолит, booking-service, booking-history-service, Kafka")
+
+Rel(user, hotelio, "Поиск и бронирование", "HTTPS, REST")
+Rel(partner, hotelio, "Поиск и бронирование", "HTTPS, REST (контракт не меняется)")
+Rel(analyst, hotelio, "Статистика бронирований", "HTTPS, REST")
+
+SHOW_LEGEND()
+@enduml
