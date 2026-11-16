@@ -1,0 +1,6 @@
+# v2 — новая версия с фичей X
+version: v2
+replicaCount: 1
+enableFeatureX: true
+service:
+  enabled: false

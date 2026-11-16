@@ -1,0 +1,69 @@
+@startuml C2_Container_Target
+title Hotelio Container Diagram: Target (финальное состояние через год)
+
+!include <C4/C4_Container>
+
+Person(user, "Пользователь", "Ищет и бронирует отели, пользуется личным кабинетом")
+Person(analyst, "Аналитик", "Смотрит статистику бронирований")
+System_Ext(partners, "Партнерские каналы", "Работают через публичный REST API")
+
+System_Boundary(hotelio, "Hotelio") {
+    Container(frontend, "Frontend", "Web / Mobile", "Клиентские приложения")
+
+    Boundary(k8s, "Kubernetes + Istio (mTLS, canary, retries, circuit breaking)") {
+        Container(kong, "API Gateway", "Kong", "Единая точка входа: маршрутизация, аутентификация, rate limiting")
+        Container(bff, "GraphQL BFF", "Apollo Federation", "Суперграф для фронтенда, ACL на уровне запросов")
+
+        Container(booking, "booking-service", "Java, gRPC", "Бронирования, расчет цены, сабграф Booking")
+        ContainerDb(booking_db, "Booking DB", "PostgreSQL", "booking, outbox, проекции пользователей и отелей")
+
+        Container(promo, "promo-service", "Java, Spring Boot", "Промокоды и акции, сабграф PromoCode")
+        ContainerDb(promo_db, "Promo DB", "PostgreSQL", "promo_code")
+
+        Container(hotel, "hotel-service", "Java, Spring Boot", "Отели и поиск, сабграф Hotel")
+        ContainerDb(hotel_db, "Hotel DB", "PostgreSQL", "hotel")
+
+        Container(review, "review-service", "Java, Spring Boot", "Отзывы и доверие к отелю")
+        ContainerDb(review_db, "Review DB", "PostgreSQL", "review")
+
+        Container(usr, "user-service", "Java, Spring Boot", "Пользователи, статусы, VIP, черный список")
+        ContainerDb(user_db, "User DB", "PostgreSQL", "app_user")
+
+        Container(history, "booking-history-service", "Java, Spring Boot", "История и статистика бронирований")
+        ContainerDb(history_db, "History DB", "PostgreSQL", "booking_history")
+
+        Container(kafka, "Kafka", "Kafka cluster", "Доменные события всех сервисов")
+        Container(obs, "Метрики и трассировка через Istio", "Prometheus, Grafana, Jaeger", "Собирает метрики и трейсы со всех сервисов через sidecar-прокси Istio")
+    }
+}
+
+Rel(user, frontend, "Использует")
+Rel(frontend, kong, "Запросы данных", "HTTPS")
+Rel(partners, kong, "Бронирования, поиск отелей", "HTTPS, REST")
+Rel(analyst, kong, "Статистика бронирований", "HTTPS, REST")
+
+Rel(kong, bff, "Запросы фронтенда", "GraphQL")
+Rel(kong, booking, "Партнерский API бронирований", "gRPC")
+Rel(kong, hotel, "Партнерский API отелей", "REST")
+Rel(kong, history, "Статистика", "REST")
+
+Rel(bff, booking, "Сабграф Booking", "GraphQL")
+Rel(bff, hotel, "Сабграф Hotel", "GraphQL")
+Rel(bff, promo, "Сабграф PromoCode", "GraphQL")
+
+Rel(booking, promo, "Проверка промокода", "gRPC")
+Rel(booking, booking_db, "Читает и пишет", "JDBC")
+Rel(promo, promo_db, "Читает и пишет", "JDBC")
+Rel(hotel, hotel_db, "Читает и пишет", "JDBC")
+Rel(review, review_db, "Читает и пишет", "JDBC")
+Rel(usr, user_db, "Читает и пишет", "JDBC")
+Rel(history, history_db, "Читает и пишет", "JDBC")
+
+Rel(booking, kafka, "BookingCreated", "outbox")
+Rel(usr, kafka, "UserStatusChanged", "outbox")
+Rel(hotel, kafka, "HotelStatusChanged", "outbox")
+Rel(review, kafka, "HotelTrustChanged", "outbox")
+Rel(kafka, booking, "Статусы пользователей и отелей в локальные проекции", "consumer")
+Rel(kafka, history, "BookingCreated", "consumer")
+
+@enduml

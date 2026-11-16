@@ -1,0 +1,63 @@
+stages:
+  - build
+  - test
+  - deploy
+  - tag
+
+variables:
+  IMAGE_NAME: booking-service
+  IMAGE_TAG: $CI_COMMIT_SHORT_SHA
+  RELEASE_NAME: booking-service
+  TEST_CONTAINER: booking-service-ci-test
+  TEST_PORT: "8081"
+
+build:
+  stage: build
+  script:
+    - docker build -t $IMAGE_NAME:$IMAGE_TAG booking-service
+    - docker image ls $IMAGE_NAME
+
+unit-test:
+  stage: test
+  script:
+    - docker build --target test booking-service
+
+test:
+  stage: test
+  script:
+    - docker rm -f $TEST_CONTAINER || true
+    - docker run -d --name $TEST_CONTAINER -p $TEST_PORT:8080 $IMAGE_NAME:$IMAGE_TAG
+    - |
+      for i in $(seq 1 15); do
+        curl -fs http://localhost:$TEST_PORT/ping && break
+        sleep 1
+      done
+    - test "$(curl -fs http://localhost:$TEST_PORT/ping)" = "pong v1"
+    - test "$(curl -fs http://localhost:$TEST_PORT/ready)" = "ready"
+    - echo "✅ /ping и /ready отвечают"
+  after_script:
+    - docker rm -f $TEST_CONTAINER || true
+
+deploy:
+  stage: deploy
+  script:
+    - minikube image load $IMAGE_NAME:$IMAGE_TAG
+    # Две версии из одного чарта: v1 (основная) и v2 (canary с фичей X)
+    - |
+      for v in v1 v2; do
+        helm upgrade --install $RELEASE_NAME-$v helm/booking-service \
+          -f helm/booking-service/values-$v.yaml \
+          --set image.tag=$IMAGE_TAG \
+          --wait --timeout 2m
+      done
+    # Правила Istio: gateway, canary + fallback, retry + circuit breaker, фича-флаг
+    - kubectl apply -f istio/
+    - kubectl get pods -l app=$RELEASE_NAME -L version
+    - kubectl get svc $RELEASE_NAME
+
+tag:
+  stage: tag
+  script:
+    - TAG="release-istio-$(date +%Y%m%d-%H%M%S)"
+    - git tag "$TAG" $CI_COMMIT_SHA
+    - echo "Создан тег $TAG"

@@ -1,0 +1,6 @@
+# v1 — основная версия
+version: v1
+replicaCount: 2
+enableFeatureX: false
+service:
+  enabled: true

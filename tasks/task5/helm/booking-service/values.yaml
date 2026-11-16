@@ -1,0 +1,48 @@
+# Базовые значения. Версии переопределяют их в values-v1.yaml и values-v2.yaml
+replicaCount: 1
+
+# Имя приложения: общее для всех версий, по нему Service и Istio находят поды
+appName: booking-service
+# Версия: метка version на подах, по ней Istio делит трафик на subsets
+version: v1
+
+image:
+  name: booking-service
+  tag: latest
+  # Never — образ берётся из minikube (minikube image load), registry не нужен
+  pullPolicy: Never
+
+service:
+  # Service один на все версии, создаёт его только релиз v1
+  enabled: true
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+
+# Фича-флаг, попадает в контейнер как ENABLE_FEATURE_X
+enableFeatureX: false
+
+# Дополнительные переменные окружения
+env: []
+#  - name: APP_ENV
+#    value: staging
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 32Mi
+  limits:
+    cpu: 200m
+    memory: 64Mi
+
+livenessProbe:
+  path: /ping
+  initialDelaySeconds: 3
+  periodSeconds: 10
+  failureThreshold: 3
+
+readinessProbe:
+  path: /ping
+  initialDelaySeconds: 1
+  periodSeconds: 5
+  failureThreshold: 2

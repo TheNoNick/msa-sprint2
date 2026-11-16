@@ -1,0 +1,144 @@
+gitlab-ci-local build unit-test test deploy tag
+parsing and downloads finished in 42 ms.
+json schema validated in 132 ms
+build     starting shell (build)
+build     $ docker build -t $IMAGE_NAME:$IMAGE_TAG booking-service
+build     > #0 building with "default" instance using docker driver
+build     > 
+build     > #1 [internal] load build definition from Dockerfile
+build     > #1 transferring dockerfile: 676B done
+build     > #1 DONE 0.0s
+build     > 
+build     > #2 [internal] load metadata for docker.io/library/golang:1.21-alpine
+build     > #2 DONE 0.7s
+build     > 
+build     > #3 [internal] load metadata for docker.io/library/alpine:3.20
+build     > #3 DONE 0.7s
+build     > 
+build     > #4 [internal] load .dockerignore
+build     > #4 transferring context: 2B done
+build     > #4 DONE 0.0s
+build     > 
+build     > #5 [build 1/5] FROM docker.io/library/golang:1.21-alpine@sha256:2414035b086e3c42b99654c8b26e6f5b1b1598080d65fd03c7f499552ff4dc94
+build     > #5 DONE 0.0s
+build     > 
+build     > #6 [stage-2 1/3] FROM docker.io/library/alpine:3.20@sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc
+build     > #6 DONE 0.0s
+build     > 
+build     > #7 [internal] load build context
+build     > #7 transferring context: 86B done
+build     > #7 DONE 0.0s
+build     > 
+build     > #8 [build 2/5] WORKDIR /src
+build     > #8 CACHED
+build     > 
+build     > #9 [build 3/5] COPY go.mod ./
+build     > #9 CACHED
+build     > 
+build     > #10 [build 4/5] COPY *.go ./
+build     > #10 CACHED
+build     > 
+build     > #11 [build 5/5] RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o /booking-service .
+build     > #11 CACHED
+build     > 
+build     > #12 [stage-2 2/3] RUN apk add --no-cache curl && adduser -D -u 10001 app
+build     > #12 CACHED
+build     > 
+build     > #13 [stage-2 3/3] COPY --from=build /booking-service /usr/local/bin/booking-service
+build     > #13 CACHED
+build     > 
+build     > #14 exporting to image
+build     > #14 exporting layers done
+build     > #14 writing image sha256:b3e8a18724071af998c66b42dc149ee814b373d65516c67354da45b3eb62b908 done
+build     > #14 naming to docker.io/library/booking-service:34900fae done
+build     > #14 DONE 0.0s
+build     $ docker image ls $IMAGE_NAME
+build     > WARNING: This output is designed for human readability. For machine-readable output, please use --format.
+build     > IMAGE                      ID             DISK USAGE   CONTENT SIZE   EXTRA
+build     > booking-service:34900fae   b3e8a1872407       17.7MB             0B        
+build     finished in 922 ms
+test      starting shell (test)
+unit-test starting shell (test)
+test      $ docker rm -f $TEST_CONTAINER || true
+unit-test $ docker build --target test booking-service
+test      > Error response from daemon: No such container: booking-service-ci-test
+test      $ docker run -d --name $TEST_CONTAINER -p $TEST_PORT:8080 $IMAGE_NAME:$IMAGE_TAG
+test      > c43f1f7a8faa5e062803a5f6c8f049de1cea7e1eecdc17f0b7570f8e74392fb3
+test      $ for i in $(seq 1 15); do # collapsed multi-line command
+test      > pong<gclShellPromptPlaceholder> test "$(curl -fs http://localhost:$TEST_PORT/ping)" = "pong"
+test      $ test "$(curl -fs http://localhost:$TEST_PORT/ready)" = "ready"
+test      $ echo "✅ /ping и /ready отвечают"
+test      > ✅ /ping и /ready отвечают
+test      Running after script...
+test      $ docker rm -f $TEST_CONTAINER || true
+unit-test > #0 building with "default" instance using docker driver
+unit-test > 
+unit-test > #1 [internal] load build definition from Dockerfile
+unit-test > #1 transferring dockerfile: 676B done
+unit-test > #1 DONE 0.0s
+unit-test > 
+unit-test > #2 [internal] load metadata for docker.io/library/golang:1.21-alpine
+test      > booking-service-ci-test
+test      finished in 286 ms
+unit-test > #2 DONE 0.3s
+unit-test > 
+unit-test > #3 [internal] load .dockerignore
+unit-test > #3 transferring context: 2B done
+unit-test > #3 DONE 0.0s
+unit-test > 
+unit-test > #4 [build 1/5] FROM docker.io/library/golang:1.21-alpine@sha256:2414035b086e3c42b99654c8b26e6f5b1b1598080d65fd03c7f499552ff4dc94
+unit-test > #4 DONE 0.0s
+unit-test > 
+unit-test > #5 [internal] load build context
+unit-test > #5 transferring context: 86B done
+unit-test > #5 DONE 0.0s
+unit-test > 
+unit-test > #6 [build 4/5] COPY *.go ./
+unit-test > #6 CACHED
+unit-test > 
+unit-test > #7 [build 2/5] WORKDIR /src
+unit-test > #7 CACHED
+unit-test > 
+unit-test > #8 [build 5/5] RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o /booking-service .
+unit-test > #8 CACHED
+unit-test > 
+unit-test > #9 [build 3/5] COPY go.mod ./
+unit-test > #9 CACHED
+unit-test > 
+unit-test > #10 [test 1/1] RUN CGO_ENABLED=0 go test -v ./...
+unit-test > #10 CACHED
+unit-test > 
+unit-test > #11 exporting to image
+unit-test > #11 exporting layers done
+unit-test > #11 writing image sha256:b2b056e4c9355dd20043bc68edfcab1946c57dc61c4daf746aeb11d655fe8e58 done
+unit-test > #11 DONE 0.0s
+unit-test finished in 419 ms
+deploy    starting shell (deploy)
+deploy    $ minikube image load $IMAGE_NAME:$IMAGE_TAG
+deploy    $ helm upgrade --install $RELEASE_NAME helm/booking-service -f helm/booking-service/values-$DEPLOY_ENV.yaml --set image.tag=$IMAGE_TAG --wait --timeout 2m # collapsed multi-line command
+deploy    > Release "booking-service" has been upgraded. Happy Helming!
+deploy    > NAME: booking-service
+deploy    > LAST DEPLOYED: Mon Nov 16 18:38:19 2026
+deploy    > NAMESPACE: default
+deploy    > STATUS: deployed
+deploy    > REVISION: 5
+deploy    > TEST SUITE: None
+deploy    $ kubectl get pods -l app=$RELEASE_NAME
+deploy    > NAME                               READY   STATUS    RESTARTS   AGE
+deploy    > booking-service-65fcd4ff6b-h8q6q   1/1     Running   0          4m26s
+deploy    $ kubectl get svc $RELEASE_NAME
+deploy    > NAME              TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
+deploy    > booking-service   ClusterIP   10.108.178.47   <none>        80/TCP    31m
+deploy    finished in 3.79 s
+tag       starting shell (tag)
+tag       $ TAG="release-$DEPLOY_ENV-$(date +%Y%m%d-%H%M%S)"
+tag       $ git tag "$TAG" $CI_COMMIT_SHA
+tag       $ echo "Создан тег $TAG"
+tag       > Создан тег release-staging-20261116-183819
+tag       finished in 8.82 ms
+
+ PASS  build    
+ PASS  unit-test
+ PASS  test     
+ PASS  deploy   
+ PASS  tag      

@@ -1,0 +1,28 @@
+extend schema
+  @link(
+    url: "https://specs.apollo.dev/federation/v2.3"
+    import: ["@key", "@external", "@requires", "@override"]
+  )
+
+type Booking @key(fields: "id") {
+  id: ID!
+  userId: String! @external
+  promoCode: String @external
+  # Поле переехало из booking-subgraph: скидка считается по актуальному состоянию промокода
+  discountPercent: Float! @override(from: "booking-subgraph") @requires(fields: "promoCode userId")
+  discountInfo: DiscountInfo @requires(fields: "promoCode userId")
+}
+
+type DiscountInfo {
+  code: String!
+  isValid: Boolean!
+  originalDiscount: Float!  # скидка по промокоду из справочника
+  finalDiscount: Float!     # скидка после проверки: 0, если промокод истёк или не подходит пользователю
+  description: String
+  expiresAt: String
+  vipOnly: Boolean!
+}
+
+type Query {
+  validatePromoCode(code: String!, userId: String): DiscountInfo!
+}

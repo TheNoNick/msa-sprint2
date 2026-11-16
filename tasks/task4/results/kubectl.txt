@@ -1,0 +1,11 @@
+$ kubectl get pods -l app=booking-service -o wide
+  NAME                               READY   STATUS    RESTARTS   AGE     IP            NODE       NOMINATED NODE   READINESS GATES
+  booking-service-65fcd4ff6b-h8q6q   1/1     Running   0          4m45s   10.244.0.35   minikube   <none>           <none>
+
+$ kubectl get services
+  NAME              TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
+  booking-service   ClusterIP   10.108.178.47   <none>        80/TCP    27m
+
+$ helm list
+  NAME            NAMESPACE       REVISION        UPDATED                                 STATUS          CHART                   APP VERSION
+  booking-service default         5               2026-11-16 18:38:19.488862621 +0400 +04 deployed        booking-service-0.1.0   1.0

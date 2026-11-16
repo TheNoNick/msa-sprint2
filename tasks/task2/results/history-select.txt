@@ -1,0 +1,7 @@
+=== history-db (booking-history-service), SELECT * FROM booking_history ===
+               event_id               | booking_id |   user_id   |   hotel_id   | promo_code | discount_percent | price |           booked_at           |          received_at          
+--------------------------------------+------------+-------------+--------------+------------+------------------+-------+-------------------------------+-------------------------------
+ 8d4043ba-9ea5-4451-9527-44f31e9c552d |          3 | test-user-3 | test-hotel-1 |            |                0 |    80 | 2026-11-14 19:43:36.837655+00 | 2026-11-14 19:43:37.10002+00
+ bd0c30b0-7047-4c72-bcb7-3e8153458333 |          4 | test-user-2 | test-hotel-1 | TESTCODE1  |               10 |    90 | 2026-11-14 19:43:36.923316+00 | 2026-11-14 19:43:37.112756+00
+(2 rows)
+
