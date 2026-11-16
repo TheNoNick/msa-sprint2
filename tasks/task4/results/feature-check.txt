@@ -1,0 +1,19 @@
+=== staging ===
+$ kubectl get pods -l app=booking-service
+NAME                               READY   STATUS    RESTARTS   AGE
+booking-service-65fcd4ff6b-9qkzw   1/1     Running   0          11s
+$ kubectl port-forward svc/booking-service 18080:80 &
+$ curl -i http://localhost:18080/feature
+HTTP/1.1 200 OK
+Feature X is enabled!
+=== prod ===
+$ kubectl get pods -l app=booking-service
+NAME                               READY   STATUS    RESTARTS   AGE
+booking-service-586666c465-2ckbd   1/1     Running   0          27s
+booking-service-586666c465-dl289   1/1     Running   0          21s
+booking-service-586666c465-z5vf6   1/1     Running   0          33s
+$ kubectl port-forward svc/booking-service 18080:80 &
+$ curl -i http://localhost:18080/feature
+HTTP/1.1 404 Not Found
+404 page not found
+

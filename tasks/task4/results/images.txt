@@ -1,0 +1,6 @@
+$ docker image ls booking-service
+  IMAGE                      ID             DISK USAGE   CONTENT SIZE   EXTRA
+  booking-service:34900fae   b3e8a1872407       17.7MB             0B
+
+$ minikube image list | grep booking-service
+docker.io/library/booking-service:34900fae
